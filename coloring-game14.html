@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TAMAGREN Coloring Game</title>
+<style>
+:root{--ink:#1e1b4b;--sun:#fbbf24;--mint:#34d399;--pink:#f472b6}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{display:flex;flex-direction:column;height:100dvh;background:linear-gradient(160deg,#1e1b4b,#312e81 55%,#0f766e);color:#fff;font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;overflow:hidden;user-select:none;-webkit-tap-highlight-color:transparent;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+header{display:flex;align-items:center;gap:8px;padding:6px 10px;flex-wrap:wrap}
+h1{margin:0;font-size:clamp(15px,3.6vw,22px);color:var(--sun);flex:1;white-space:nowrap}
+.pill{background:#0004;border-radius:20px;padding:4px 10px;font-weight:700;font-size:13px}
+#guide{display:flex;align-items:center;gap:8px;padding:0 10px;height:78px}
+#mika{width:70px;height:78px;flex:none;cursor:pointer}
+.eye{transform-box:fill-box;transform-origin:center;animation:blink 4s infinite}
+@keyframes blink{0%,94%,100%{transform:scaleY(1)}97%{transform:scaleY(.1)}}
+#say{position:relative;background:#fff;color:var(--ink);padding:8px 12px;border-radius:16px;font-size:clamp(12px,3.2vw,15px);font-weight:700;line-height:1.3;flex:1;max-height:70px;overflow:auto}
+#say:before{content:"";position:absolute;left:-8px;top:24px;border:8px solid transparent;border-right-color:#fff;border-left:0}
+#stage{flex:1;min-height:0;display:flex;justify-content:center;align-items:center;padding:4px 8px}
+#card{background:#fff;border-radius:20px;border:4px solid var(--sun);box-shadow:0 10px 30px #0008;aspect-ratio:4/3;width:min(100%,calc((100dvh - 350px)*4/3));max-height:100%;position:relative;overflow:hidden}
+#card svg{width:100%;height:100%;display:block;touch-action:manipulation}
+.c{fill:#fff;stroke:#222;stroke-width:2.5;stroke-linejoin:round;cursor:pointer;transition:fill .15s}
+.c:hover{filter:brightness(.95)}
+.k{fill:#222;pointer-events:none}.h{fill:#fff;pointer-events:none}
+.l{fill:none;stroke:#222;stroke-width:2.5;stroke-linecap:round;pointer-events:none}
+.pulse{animation:pl .5s 4;stroke:#f59e0b!important}
+@keyframes pl{50%{stroke-width:8;filter:brightness(1.2)}}
+#bar{position:absolute;left:0;right:0;bottom:0;height:7px;background:#e2e8f0}
+#fill{height:100%;width:0;background:linear-gradient(90deg,var(--mint),#3b82f6);transition:width .3s}
+#palette,#tools,#strip{display:flex;gap:6px;overflow-x:auto;padding:6px 10px;scrollbar-width:none}
+#palette{justify-content:safe center}
+#tools{justify-content:safe center;flex-wrap:wrap}
+.sw{width:34px;height:34px;border-radius:50%;border:3px solid #fff;flex:none;cursor:pointer;transition:transform .15s}
+.sw.on{transform:scale(1.3);border-color:var(--sun);box-shadow:0 0 10px var(--sun)}
+button{font:inherit;font-weight:700;font-size:13px;border:0;border-radius:12px;padding:8px 12px;background:#fff2;color:#fff;cursor:pointer;min-height:38px}
+button:active{transform:scale(.94)}
+button.on{background:var(--sun);color:var(--ink)}
+input[type=color]{width:36px;height:36px;border:0;padding:0;border-radius:50%;flex:none;background:none}
+.card{flex:none;width:76px;height:70px;border-radius:14px;background:#fff2;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;font-weight:700;position:relative;cursor:pointer;gap:2px}
+.card b{font-size:26px;font-weight:400}.card.on{background:var(--sun);color:var(--ink)}.card i{position:absolute;top:2px;right:5px;font-style:normal;font-size:12px}
+#modal{position:fixed;inset:0;background:#000a;display:none;align-items:center;justify-content:center;z-index:9;padding:16px}
+#modal>div{background:#fff;color:var(--ink);border-radius:24px;padding:22px;text-align:center;max-width:340px;animation:pop .3s}
+@keyframes pop{from{transform:scale(.7);opacity:0}}
+#modal h2{margin:0 0 6px;font-size:26px}#modal .big{font-size:64px}
+#fx{position:fixed;inset:0;pointer-events:none;z-index:10}
+@media(prefers-reduced-motion:reduce){*{animation:none!important}}
+</style></head><body>
+<header><h1>🦁 TAMAGREN Coloring Game</h1><span class="pill" id="streak">🔥 1</span><span class="pill" id="tot">⭐ 0</span><span class="pill" id="stars">☆☆☆☆☆</span></header>
+<div id="guide">
+<svg id="mika" viewBox="0 0 120 130" aria-label="Momo, your guide"><path d="M24,45C0,70,2,112,20,126C34,104,34,74,36,52Z" fill="#f472b6"/><path d="M96,45C120,70,118,112,100,126C86,104,86,74,84,52Z" fill="#f472b6"/><path d="M28,128C30,100,90,100,92,128Z" fill="#6366f1"/><path d="M52,100L60,114L68,100Z" fill="#fff"/><rect x="52" y="86" width="16" height="16" fill="#ffe4d1"/><ellipse cx="60" cy="62" rx="33" ry="35" fill="#ffe4d1"/><path d="M25,66C18,18,102,18,95,66C92,46,84,38,72,44C62,52,52,46,44,38C34,44,28,52,25,66Z" fill="#f472b6"/><g class="eye"><ellipse cx="45" cy="68" rx="9" ry="12" fill="#fff"/><ellipse cx="45" cy="70" rx="7" ry="10" fill="#7c3aed"/><circle cx="45" cy="72" r="4" fill="#1e1b4b"/><circle cx="42" cy="65" r="3" fill="#fff"/></g><g class="eye"><ellipse cx="75" cy="68" rx="9" ry="12" fill="#fff"/><ellipse cx="75" cy="70" rx="7" ry="10" fill="#7c3aed"/><circle cx="75" cy="72" r="4" fill="#1e1b4b"/><circle cx="72" cy="65" r="3" fill="#fff"/></g><ellipse cx="35" cy="82" rx="6" ry="3.5" fill="#fb7185" opacity=".6"/><ellipse cx="85" cy="82" rx="6" ry="3.5" fill="#fb7185" opacity=".6"/><path id="mouth" d="M50,84Q60,94 70,84" stroke="#be123c" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M30,34L22,24L36,26L40,16L46,30Z" fill="#ef4444"/></svg>
+<div id="say">Hi!</div></div>
+<div id="stage"><div id="card"><svg id="art" viewBox="0 0 600 450"></svg><div id="bar"><div id="fill"></div></div></div></div>
+<div id="palette"></div>
+<div id="tools"><button id="undo">↩️ Undo</button><button id="hint">💡 Hint</button><button id="read">🔊 Read</button><button id="magic">🎲 Magic</button><button id="reset">🧽 Clear</button><button id="snd" class="on">🎵 Sound</button></div>
+<div id="strip"></div>
+<div id="modal"><div><div class="big" id="mE">🎉</div><h2>Amazing!</h2><p id="mT"></p><button class="on" id="nx">Next ➜</button></div></div>
+<canvas id="fx"></canvas>
+<script>
+const $=s=>document.querySelector(s);
+const P=d=>`<path class="c" d="${d}"/>`,E=(x,y,a,b)=>`<ellipse class="c" cx="${x}" cy="${y}" rx="${a}" ry="${b}"/>`;
+const Sy=s=>s+`<g transform="translate(600 0) scale(-1 1)">${s}</g>`;
+const eye=(x,y,r)=>E(x,y,r*1.25,r)+`<circle class="k" cx="${x}" cy="${y}" r="${r*.6}"/><circle class="h" cx="${x+r*.25}" cy="${y-r*.25}" r="${r*.22}"/>`;
+const L=d=>`<path class="l" d="${d}"/>`,N=(x,y,a,b)=>`<ellipse class="k" cx="${x}" cy="${y}" rx="${a}" ry="${b}"/>`;
+const fl=(x,y)=>`<g transform="translate(${x} ${y})">`+[0,72,144,216,288].map(a=>`<ellipse class="c" cx="0" cy="-15" rx="8" ry="15" transform="rotate(${a})"/>`).join('')+`<circle class="c" r="7"/></g>`;
+const scene=Sy(P('M0,450V395L15,425L28,370L45,425L62,385L80,450Z'))+fl(45,45)+fl(555,45);
+const A=[
+{id:'fawn',n:'Fawn',e:'🦌',st:1,f:'Baby deer have white spots that hide them in the forest!',s:Sy(P('M262,70C230,40,200,30,170,15C215,12,255,40,272,72Z'))+P('M265,170C255,220,250,250,255,280H345C350,250,345,220,335,170Z')+P('M200,300C200,245,260,255,300,262C340,255,400,245,400,300C410,345,390,365,360,365H240C210,365,190,345,200,300Z')+[[250,300],[280,285],[320,290],[350,310],[265,335],[310,335],[340,345],[225,320]].map(p=>E(p[0],p[1],8,6)).join('')+Sy(P('M250,335V405Q250,415,262,415H285L288,335Z'))+P('M240,110C240,55,360,55,360,110C365,150,335,180,300,185C265,180,235,150,240,110Z')+Sy(E(215,100,10,6))+E(300,155,28,20)+P('M288,148H312L300,162Z')+Sy(eye(268,108,17))+L('M300,162V175')},
+{id:'lion',n:'Lion',e:'🦁',st:1,f:'A lion\'s roar can be heard 8 km away!',s:P('M300,40C400,30,480,100,470,200C480,300,420,390,300,400C180,390,120,300,130,200C120,100,200,30,300,40Z')+Sy(P('M190,110C165,70,205,60,225,85Z'))+P('M300,95C390,95,410,200,385,280C360,350,240,350,215,280C190,200,210,95,300,95Z')+E(300,285,55,40)+P('M272,245H328L300,278Z')+Sy(eye(250,200,16))+L('M300,278V300M300,300Q280,318 262,306M300,300Q320,318 338,306')},
+{id:'elephant',n:'Elephant',e:'🐘',st:1,f:'Elephants use their trunks like a hand, a straw and a trumpet!',s:Sy(P('M215,130C90,70,40,230,130,330C170,340,200,300,215,260Z'))+P('M300,70C390,70,400,140,390,220C385,290,350,330,340,360H260C250,330,215,290,210,220C200,140,210,70,300,70Z')+Sy(P('M262,320C225,360,230,410,255,415C262,380,275,350,282,335Z'))+P('M265,230H335C345,310,340,370,330,420C310,440,285,440,275,420C262,370,258,300,265,230Z')+Sy(eye(250,170,11))+L('M285,265H315M283,295H317M281,325H319')},
+{id:'panda',n:'Panda',e:'🐼',st:1,f:'Pandas munch bamboo for about 12 hours every day!',s:P('M180,340C150,400,170,440,300,440C430,440,450,400,420,340C380,360,220,360,180,340Z')+Sy(E(205,110,38,38))+P('M300,80C420,80,470,170,440,260C410,340,190,340,160,260C130,170,180,80,300,80Z')+Sy(P('M215,190C190,230,215,275,255,255C285,235,275,185,245,170C230,172,220,180,215,190Z'))+Sy(eye(240,218,10))+E(300,285,55,42)+P('M278,262H322Q322,282,300,288Q278,282,278,262Z')+L('M300,288V305M300,305Q285,318 272,308M300,305Q315,318 328,308')},
+{id:'pig',n:'Pig',e:'🐷',st:2,f:'Pigs are super smart and love to play in the mud!',s:Sy(P('M215,110C170,70,130,100,135,160C165,175,205,160,225,140Z'))+E(300,225,130,120)+E(300,268,58,42)+Sy(N(283,268,6,11))+Sy(eye(245,195,14))+Sy(E(205,262,20,15))+L('M270,310Q300,325 330,310')},
+{id:'cow',n:'Cow',e:'🐮',st:2,f:'Cows have best friends and get sad when apart!',s:Sy(P('M215,100C190,70,170,60,150,75C170,95,195,115,225,120Z'))+Sy(P('M185,150C130,130,105,160,100,185C140,200,175,190,195,180Z'))+P('M300,90C390,90,420,150,395,250C380,320,340,370,300,370C260,370,220,320,205,250C180,150,210,90,300,90Z')+P('M300,90C350,90,375,110,365,150C340,160,320,140,300,150C280,140,260,160,235,150C225,110,250,90,300,90Z')+E(345,255,26,22)+E(300,320,72,48)+Sy(N(272,322,9,12))+Sy(eye(250,195,15))},
+{id:'rabbit',n:'Rabbit',e:'🐰',st:2,f:'A rabbit\'s teeth never stop growing!',s:Sy(P('M255,160C215,70,215,15,245,12C275,18,285,80,285,160Z')+P('M257,135C238,75,238,40,248,38C262,42,268,85,270,135Z'))+P('M200,350C170,425,220,447,300,447C380,447,430,425,400,350Z')+E(300,255,115,95)+Sy(E(245,300,35,28))+P('M285,265H315L300,282Z')+P('M290,305H310V338H290Z')+Sy(eye(250,238,14))+L('M300,282V305M300,305Q285,318 272,308M300,305Q315,318 328,308')},
+{id:'owl',n:'Owl',e:'🦉',st:3,f:'Owls can turn their heads almost all the way around!',s:P('M300,60C420,60,460,200,440,330C430,400,370,430,300,430C230,430,170,400,160,330C140,200,180,60,300,60Z')+Sy(P('M200,95L178,40L250,78Z'))+E(300,325,82,92)+Sy(P('M165,200C120,260,135,350,190,395C205,330,198,260,188,210Z'))+Sy(E(245,170,48,48))+Sy(eye(245,170,16))+P('M282,195H318L300,238Z')+Sy(P('M240,428L230,448H272L264,428Z'))+L('M260,290q10,10 20,0M300,300q10,10 20,0M270,330q10,10 20,0M305,345q10,10 20,0')},
+{id:'fox',n:'Fox',e:'🦊',st:3,f:'Foxes use their bushy tails as warm blankets!',s:Sy(P('M170,200L150,60L270,130Z'))+P('M300,110C380,110,430,150,470,200C440,300,370,380,300,395C230,380,160,300,130,200C170,150,220,110,300,110Z')+Sy(P('M300,395C230,380,160,300,135,215C190,260,240,290,300,300Z'))+P('M300,150L335,310L300,345L265,310Z')+P('M285,350H315L300,375Z')+Sy(eye(235,222,14))+L('M300,375V388')},
+{id:'penguin',n:'Penguin',e:'🐧',st:3,f:'Penguins can\'t fly, but they zoom through water!',s:E(300,250,130,185)+E(300,290,92,135)+Sy(P('M178,200C130,270,140,350,190,385C205,320,200,260,190,215Z'))+Sy(E(262,150,30,28))+P('M275,182H325L300,218Z')+Sy(eye(262,150,10))+Sy(P('M240,428C215,432,205,445,215,450H268Z'))}
+];
+const W=[['SUN','☀️',1,'The sun is a giant star that gives us light!'],['MOON','🌙',1,'The moon glows by reflecting sunlight.'],['TREE','🌳',1,'Trees give us shade and fresh air.'],['FISH','🐟',1,'Fish breathe underwater using gills.'],['SAFARI','🦒',2,'Safari is Swahili for “journey”.'],['JUNGLE','🌴',2,'Jungles are hot, wet and full of life.'],['FLOWER','🌸',2,'Bees love to visit flowers!'],['RIVER','🏞️',2,'Rivers flow all the way to the sea.'],['RAINBOW','🌈',3,'Rainbows have seven colors.'],['ELEPHANT','🐘',3,'Spell it slowly: E-L-E-P-H-A-N-T!'],['BUTTERFLY','🦋',3,'Butterflies taste with their feet!'],['FRIENDSHIP','🤝',3,'Friends make everything more fun!']];
+const wsvg=(w,e)=>{const n=w.length,sp=540/n,fs=Math.min(150,sp*1.45);return`<text x="300" y="150" font-size="95" text-anchor="middle">${e}</text>`+[...w].map((c,i)=>`<text class="c" x="${30+sp*(i+.5)}" y="320" font-size="${fs}" font-weight="900" text-anchor="middle" font-family="Trebuchet MS,Segoe UI,sans-serif" stroke-width="4">${c}</text>`).join('')};
+const ITEMS=[...A.map(a=>({...a,t:'a',svg:scene+a.s})),...W.map(w=>({id:'w_'+w[0],n:w[0],e:w[1],st:w[2],t:'w',f:w[3],svg:wsvg(w[0],w[1])}))];
+const COLORS=['#ef4444','#f97316','#fbbf24','#a3e635','#22c55e','#06b6d4','#3b82f6','#8b5cf6','#ec4899','#fda4af','#b45309','#92400e','#64748b','#1f2937','#fef3c7','#ffffff'];
+let S={done:{},prog:{},snd:1,streak:0,last:''};
+try{Object.assign(S,JSON.parse(localStorage.getItem('safari3')||'{}'))}catch(e){}
+const save=()=>{try{localStorage.setItem('safari3',JSON.stringify(S))}catch(e){}};
+let cur,col=COLORS[0],hist=[],undos=0,tab='a',said={},idle,els=[];
+const day=d=>new Date(d).toDateString(),today=day(Date.now());
+if(S.last!==today){S.streak=S.last===day(Date.now()-864e5)?S.streak+1:1;S.last=today;save()}
+/* Sound & voice */
+let ac;const beep=(f=520,d=.1)=>{if(!S.snd)return;try{ac=ac||new AudioContext();const o=ac.createOscillator(),g=ac.createGain();o.frequency.value=f;o.type='triangle';g.gain.value=.12;g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+d);o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+d)}catch(e){}};
+const speak=t=>{if(!S.snd||!window.speechSynthesis)return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.rate=.9;u.pitch=1.4;speechSynthesis.speak(u)}catch(e){}};
+/* Momo */
+const MOUTH={happy:['M50,84Q60,94 70,84','none'],wow:['M54,82Q60,98 66,82Z','#be123c'],think:['M52,86Q60,82 68,86','none'],cheer:['M46,80Q60,104 74,80Z','#be123c']};
+function say(t,m='happy',v){$('#say').textContent=t;const o=MOUTH[m];$('#mouth').setAttribute('d',o[0]);$('#mouth').setAttribute('fill',o[1]);if(v)speak(t);clearTimeout(idle);idle=setTimeout(()=>say(tip(),'think'),25000)}
+const TIPS=['Stuck? Tap 💡 and I will show you a spot to color!','Try 🎲 Magic for a surprise rainbow!','Tap 🔊 to hear the word or fact!','Mix wild colors! A purple lion? Why not!','Tap me anytime for a tip!'];
+const tip=()=>TIPS[Math.random()*TIPS.length|0];
+$('#mika').onclick=()=>{beep(700);say(tip(),'wow')};
+/* Palette */
+const pal=$('#palette');
+COLORS.forEach((c,i)=>{const d=document.createElement('div');d.className='sw'+(i?'':' on');d.style.background=c;d.onclick=()=>{pal.querySelectorAll('.sw').forEach(x=>x.classList.remove('on'));d.classList.add('on');col=c;beep(400+i*30,.06)};pal.appendChild(d)});
+const pk=document.createElement('input');pk.type='color';pk.title='Mix your own color';pk.oninput=()=>{col=pk.value;pal.querySelectorAll('.sw').forEach(x=>x.classList.remove('on'))};pal.appendChild(pk);
+/* Level strip */
+const need=st=>st==1?0:st==2?3:6,nDone=()=>Object.keys(S.done).length;
+function strip(){const s=$('#strip');s.innerHTML='';[['a','🐾 Animals'],['w','🔤 Words']].forEach(([k,l])=>{const b=document.createElement('button');b.textContent=l;b.className=tab==k?'on':'';b.onclick=()=>{tab=k;strip()};s.appendChild(b)});
+ITEMS.filter(i=>i.t==tab).forEach(it=>{const lock=nDone()<need(it.st),d=document.createElement('div');d.className='card'+(cur&&cur.id==it.id?' on':'');d.innerHTML=`<b>${lock?'🔒':it.e}</b>${it.n}${S.done[it.id]?'<i>✅</i>':''}`;d.onclick=()=>lock?(beep(150,.2),say(`Color ${need(it.st)-nDone()} more picture(s) to unlock this level!`,'think')):load(it);s.appendChild(d)});$('#tot').textContent='⭐ '+Object.values(S.done).reduce((a,b)=>a+b,0);$('#streak').textContent='🔥 '+S.streak}
+/* Load & paint */
+function load(it){cur=it;$('#art').innerHTML=it.svg;els=[...document.querySelectorAll('#art .c')];hist=[];undos=0;said={};(S.prog[it.id]||[]).forEach((c,i)=>{if(c&&els[i]){els[i].style.fill=c;els[i].dataset.f=1}});upd();strip();say(it.t=='a'?`This is a ${it.n}! ${it.f}`:`Let's color the word ${it.n}!`,'happy',1)}
+function upd(){const n=els.filter(e=>e.dataset.f).length,p=n/els.length*100;$('#fill').style.width=p+'%';const s=Math.floor(p/20);$('#stars').textContent='★'.repeat(s)+'☆'.repeat(5-s);return p}
+$('#art').addEventListener('click',e=>{const el=e.target.closest('.c');if(!el)return;hist.push([el,el.style.fill,el.dataset.f]);el.style.fill=col;el.dataset.f=1;beep(500+Math.random()*300);S.prog[cur.id]=els.map(x=>x.dataset.f?x.style.fill:0);save();const p=upd();[25,50,75].forEach(t=>{if(p>=t&&!said[t]){said[t]=1;say({25:'Nice start! You are a natural artist!',50:'Halfway there! Looking gorgeous!',75:'Almost done! Just a few spots left!'}[t],'wow')}});if(p>=100)win()});
+$('#undo').onclick=()=>{const h=hist.pop();if(!h)return say('Nothing to undo yet!','think');undos++;h[0].style.fill=h[1];if(!h[2])delete h[0].dataset.f;S.prog[cur.id]=els.map(x=>x.dataset.f?x.style.fill:0);save();upd();beep(300)};
+$('#hint').onclick=()=>{const e=els.find(x=>!x.dataset.f);if(!e)return;e.classList.add('pulse');setTimeout(()=>e.classList.remove('pulse'),2200);say('Look at the glowing spot! 💡','wow')};
+$('#read').onclick=()=>speak(cur.t=='a'?`${cur.n}. ${cur.f}`:`${[...cur.n].join(', ')}. ${cur.n}. ${cur.f}`);
+$('#magic').onclick=()=>{els.filter(x=>!x.dataset.f).forEach(x=>{x.style.fill=COLORS[Math.random()*14|0];x.dataset.f=1});S.prog[cur.id]=els.map(x=>x.style.fill);save();beep(900,.2);if(upd()>=100)win()};
+$('#reset').onclick=()=>{els.forEach(x=>{x.style.fill='';delete x.dataset.f});S.prog[cur.id]=[];save();upd();say('Fresh page! Let\'s go!','cheer')};
+$('#snd').onclick=function(){S.snd=S.snd?0:1;this.classList.toggle('on',!!S.snd);save()};
+$('#snd').classList.toggle('on',!!S.snd);
+/* Win */
+function win(){const st=undos<=3?3:undos<=8?2:1;S.done[cur.id]=Math.max(S.done[cur.id]||0,st);save();confetti();beep(880,.3);setTimeout(()=>beep(1100,.4),200);$('#mE').textContent=cur.e;$('#mT').textContent=`You finished ${cur.n}! `+'⭐'.repeat(st);$('#modal').style.display='flex';say('Wow, you did it! I am so proud of you!','cheer',1);strip()}
+$('#nx').onclick=()=>{$('#modal').style.display='none';const l=ITEMS.filter(i=>i.t==cur.t),n=l[(l.indexOf(cur)+1)%l.length];nDone()<need(n.st)?load(l[0]):load(n)};
+function confetti(){const c=$('#fx'),x=c.getContext('2d');c.width=innerWidth;c.height=innerHeight;const p=Array.from({length:120},()=>({x:Math.random()*c.width,y:-Math.random()*c.height,r:4+Math.random()*6,v:2+Math.random()*4,c:COLORS[Math.random()*14|0]}));(function f(){x.clearRect(0,0,c.width,c.height);let a=0;p.forEach(q=>{q.y+=q.v;if(q.y<c.height)a=1;x.fillStyle=q.c;x.beginPath();x.arc(q.x,q.y,q.r,0,7);x.fill()});if(a)requestAnimationFrame(f)})()}
+/* Start */
+strip();load(ITEMS.find(i=>!S.done[i.id])||ITEMS[0]);
+say(`Hi, I'm Momo! 🌸 Pick a color and tap the picture. I'll cheer you on!${S.streak>1?` Day ${S.streak} in a row!`:''}`,'cheer');
+</script></body></html>
